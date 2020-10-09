@@ -45,6 +45,21 @@ class Post(db.Model):
                             default=datetime.utcnow)
     content = db.Column(db.Text, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    like_count = db.Column(db.Integer)
+    dislike_count = db.Column(db.Integer)
 
     def __repr__(self):
         return f"Post('{self.title}', '{self.date_posted}')"
+
+class Watchlist(db.Model):
+    id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    date_posted = db.Column(db.DateTime, nullable=False,
+                            default=datetime.utcnow)
+    content = db.Column(db.Text, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_name = db.Column(db.String(20), db.ForeignKey('user.username'), nullable=False)
+    bookmarked = db.Column(db.Boolean, default=False)
+
+    def __repr__(self):
+        return f"Post('{self.title}', '{self.date_posted}')"        

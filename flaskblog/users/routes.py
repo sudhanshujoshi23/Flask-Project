@@ -1,7 +1,8 @@
+import os, json
 from flask import render_template, url_for, flash, redirect, request, Blueprint
 from flask_login import login_user, current_user, logout_user, login_required
 from flaskblog import db, bcrypt
-from flaskblog.models import User, Post
+from flaskblog.models import User, Post, Watchlist
 from flaskblog.users.forms import (RegistrationForm, LoginForm, UpdateAccountForm,
                                    RequestResetForm, ResetPasswordForm)
 from flaskblog.users.utils import save_picture, send_reset_email
@@ -106,3 +107,27 @@ def reset_token(token):
         flash('Your password has been updated! You are now able to log in', 'success')
         return redirect(url_for('users.login'))
     return render_template('reset_token.html', title='Reset Password', form=form)
+
+@users.route("/user/add_to_watchlist/<int:post_id>", methods=['GET', 'POST'])
+@login_required
+def add_to_watchlist(post_id):
+    post = Post.query.filter_by(id = post_id).first_or_404()
+    bookmark_post = Watchlist(title=post.title, date_posted=post.date_posted, 
+                content=post.content,
+                user_id = post.user_id,
+                user_name = current_user.username,
+                bookmarked = True)
+    db.session.add(post)
+    db.session.commit()
+    flash('This post has been bookmarked.', 'success')
+    return redirect(url_for('main.home'))
+
+@users.route("/<string:username>/watchlist", methods=['GET', 'POST'])
+@login_required
+def watchlist(username):
+    page = request.args.get('page', 1, type=int)
+    posts = Watchlist.query.filter_by(bookmarked = True, user_name = current_user.username)\
+        .order_by(Watchlist.date_posted.desc())\
+        .paginate(page=page, per_page=5)
+    return render_template('watchlist.html', title='My Watchlist', posts = posts) 
+
